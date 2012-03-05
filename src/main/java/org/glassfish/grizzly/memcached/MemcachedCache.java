@@ -74,6 +74,10 @@ public interface MemcachedCache<K, V> extends Commands<K, V>, Cache<K, V> {
 
     public boolean cas(final K key, final V value, final int expirationInSecs, final long cas, final boolean noReply, final long writeTimeoutInMillis, final long responseTimeoutInMillis);
 
+    public Map<K, Boolean> casMulti(final Map<K, ValueWithCas<V>> map, final int expirationInSecs);
+
+    public Map<K, Boolean> casMulti(final Map<K, ValueWithCas<V>> map, final int expirationInSecs, final long writeTimeoutInMillis, final long responseTimeoutInMillis);
+
     public V get(final K key, final boolean noReply, final long writeTimeoutInMillis, final long responseTimeoutInMillis);
 
     public Map<K, V> getMulti(final Set<K> keys);
@@ -83,6 +87,10 @@ public interface MemcachedCache<K, V> extends Commands<K, V>, Cache<K, V> {
     public ValueWithKey<K, V> getKey(final K key, final boolean noReply, final long writeTimeoutInMillis, final long responseTimeoutInMillis);
 
     public ValueWithCas<V> gets(final K key, final boolean noReply, final long writeTimeoutInMillis, final long responseTimeoutInMillis);
+
+    public Map<K, ValueWithCas<V>> getsMulti(final Set<K> keys);
+
+    public Map<K, ValueWithCas<V>> getsMulti(final Set<K> keys, final long writeTimeoutInMillis, final long responseTimeoutInMillis);
 
     public V gat(final K key, final int expirationInSecs, final boolean noReply, final long writeTimeoutInMillis, final long responseTimeoutInMillis);
 
@@ -121,7 +129,7 @@ public interface MemcachedCache<K, V> extends Commands<K, V>, Cache<K, V> {
 
     /**
      * Add a specific server in this cache
-     * 
+     *
      * @param serverAddress a specific server's {@link SocketAddress} to be added
      * @return true if the given {@code serverAddress} is added successfully
      */
@@ -136,8 +144,8 @@ public interface MemcachedCache<K, V> extends Commands<K, V>, Cache<K, V> {
 
     /**
      * Check if this cache contains the given server
-     * 
-     * @param serverAddress the specific server's {@link SocketAddress} to be checked 
+     *
+     * @param serverAddress the specific server's {@link SocketAddress} to be checked
      * @return true if this cache already contains the given {@code serverAddress}
      */
     public boolean isInServerList(final SocketAddress serverAddress);
