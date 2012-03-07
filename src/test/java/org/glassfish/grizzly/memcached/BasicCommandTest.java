@@ -707,11 +707,11 @@ public class BasicCommandTest {
         }
 
         // put one missing key
-        getsResult.put("missingName", new ValueWithCas("foo", 0));
+        getsResult.put("missingName", new ValueWithCas("foo", 987654321));
         // test casMulti again
         result = userCache.casMulti(getsResult, expirationTimeoutInSec);
         // the half of keys and a missing key should be set
-        Assert.assertEquals(map.size() - multiSize / 2 + 1, result.size());
+        Assert.assertEquals(getsResult.size() - multiSize / 2 - 1, result.size());
         for (Boolean success : result.values()) {
             Assert.assertTrue(success);
         }
@@ -721,7 +721,7 @@ public class BasicCommandTest {
         for (Boolean success : result.values()) {
             Assert.assertTrue(success);
         }
-        Assert.assertEquals(getsResult.size(), result.size());
+        Assert.assertEquals(getsResult.size() - 1, result.size());
 
         manager.shutdown();
     }
