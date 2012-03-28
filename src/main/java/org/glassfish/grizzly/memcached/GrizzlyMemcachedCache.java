@@ -98,7 +98,7 @@ import java.util.logging.Logger;
  * 5. returning the connection to the pool
  * <p/>
  * For the failback of the memcached server, {@link HealthMonitorTask} will be scheduled by {@code healthMonitorIntervalInSecs}.
- * If connecting and writing are failed, this cache retries failure operations by {@code RETRY_COUNT}.
+ * If connecting and writing are failed, this cache retries failure operations by {@code retryCount}.
  * If retrials also failed, the server will be regarded as not valid and removed in {@link ConsistentHashStore}.
  * Sometimes, automatical changes of the server list can cause stale cache data at runtime.
  * So this cache provides {@code failover} flag which can turn off the failover/failback.
@@ -136,7 +136,6 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
     private static final Logger logger = Grizzly.logger(GrizzlyMemcachedCache.class);
 
     private static final AtomicInteger opaqueIndex = new AtomicInteger();
-    private static final int RETRY_COUNT = 1;
 
     private final String cacheName;
     private final TCPNIOTransport transport;
@@ -157,6 +156,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
     private final ScheduledExecutorService scheduledExecutor;
 
     private final boolean failover;
+    private final int retryCount;
 
     private final ConsistentHashStore<SocketAddress> consistentHash = new ConsistentHashStore<SocketAddress>();
 
@@ -239,6 +239,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
         connectionPool = connectionPoolBuilder.build();
 
         this.failover = builder.failover;
+        this.retryCount = builder.retryCount;
 
         this.initialServers = builder.servers;
 
@@ -2023,40 +2024,51 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
             }
             throw ie;
         }
-        try {
-            if (request.isNoReply()) {
-                connection.write(new MemcachedRequest[]{request}, new CompletionHandler<WriteResult<MemcachedRequest[], SocketAddress>>() {
-                    @Override
-                    public void cancelled() {
+        if (request.isNoReply()) {
+            connection.write(new MemcachedRequest[]{request}, new CompletionHandler<WriteResult<MemcachedRequest[], SocketAddress>>() {
+                @Override
+                public void cancelled() {
+                    try {
+                        connectionPool.returnObject(address, connection);
+                    } catch (Exception e) {
                         if (logger.isLoggable(Level.SEVERE)) {
-                            logger.log(Level.SEVERE, "failed to send the request. request={0}, connection={1}", new Object[]{request, connection});
+                            logger.log(Level.SEVERE, "failed to return the connection. address=" + address + ", connection=" + connection, e);
                         }
                     }
-
-                    @Override
-                    public void failed(Throwable t) {
-                        if (logger.isLoggable(Level.SEVERE)) {
-                            logger.log(Level.SEVERE, "failed to send the request. request=" + request + ", connection=" + connection, t);
-                        }
+                    if (logger.isLoggable(Level.SEVERE)) {
+                        logger.log(Level.SEVERE, "failed to send the request. request={0}, connection={1}", new Object[]{request, connection});
                     }
-
-                    @Override
-                    public void completed(WriteResult<MemcachedRequest[], SocketAddress> result) {
-                    }
-
-                    @Override
-                    public void updated(WriteResult<MemcachedRequest[], SocketAddress> result) {
-                    }
-                });
-            }
-        } finally {
-            try {
-                connectionPool.returnObject(address, connection);
-            } catch (Exception e) {
-                if (logger.isLoggable(Level.SEVERE)) {
-                    logger.log(Level.SEVERE, "failed to return the connection. address=" + address + ", connection=" + connection, e);
                 }
-            }
+
+                @Override
+                public void failed(Throwable t) {
+                    try {
+                        connectionPool.removeObject(address, connection);
+                    } catch (Exception e) {
+                        if (logger.isLoggable(Level.SEVERE)) {
+                            logger.log(Level.SEVERE, "failed to return the connection. address=" + address + ", connection=" + connection, e);
+                        }
+                    }
+                    if (logger.isLoggable(Level.SEVERE)) {
+                        logger.log(Level.SEVERE, "failed to send the request. request=" + request + ", connection=" + connection, t);
+                    }
+                }
+
+                @Override
+                public void completed(WriteResult<MemcachedRequest[], SocketAddress> result) {
+                    try {
+                        connectionPool.returnObject(address, connection);
+                    } catch (Exception e) {
+                        if (logger.isLoggable(Level.SEVERE)) {
+                            logger.log(Level.SEVERE, "failed to return the connection. address=" + address + ", connection=" + connection, e);
+                        }
+                    }
+                }
+
+                @Override
+                public void updated(WriteResult<MemcachedRequest[], SocketAddress> result) {
+                }
+            });
         }
     }
 
@@ -2304,7 +2316,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
 
         final boolean isMulti = (result != null);
         Connection<SocketAddress> connection = null;
-        for (int i = 0; i <= RETRY_COUNT; i++) {
+        for (int i = 0; i <= retryCount; i++) {
             try {
                 connection = connectionPool.borrowObject(address, connectTimeoutInMillis);
             } catch (PoolExhaustedException pee) {
@@ -2487,6 +2499,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
 
         private long healthMonitorIntervalInSecs = 60; // 1 min
         private boolean failover = true;
+        private int retryCount = 1;
 
         // connection pool config
         private int minConnectionPerServer = 5;
@@ -2680,6 +2693,19 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
          */
         public Builder<K, V> failover(final boolean failover) {
             this.failover = failover;
+            return this;
+        }
+
+        /**
+         * Set retry count for connection or sending
+         * <p/>
+         * Default is 1.
+         *
+         * @param retryCount the count for retrials
+         * @return this builder
+         */
+        public Builder<K, V> retryCount(final int retryCount) {
+            this.retryCount = retryCount;
             return this;
         }
     }
