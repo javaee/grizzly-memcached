@@ -190,16 +190,34 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
                                 connection = future.get(connectTimeoutInMillis, TimeUnit.MILLISECONDS);
                             }
                         } catch (InterruptedException ie) {
+                            if (!future.cancel(false) && future.isDone()) {
+                                final Connection c = future.get();
+                                if (c != null && c.isOpen()) {
+                                    c.closeSilently();
+                                }
+                            }
                             if (logger.isLoggable(Level.FINER)) {
                                 logger.log(Level.FINER, "failed to get the connection. address=" + key, ie);
                             }
                             throw ie;
                         } catch (ExecutionException ee) {
+                            if (!future.cancel(false) && future.isDone()) {
+                                final Connection c = future.get();
+                                if (c != null && c.isOpen()) {
+                                    c.closeSilently();
+                                }
+                            }
                             if (logger.isLoggable(Level.FINER)) {
                                 logger.log(Level.FINER, "failed to get the connection. address=" + key, ee);
                             }
                             throw ee;
                         } catch (TimeoutException te) {
+                            if (!future.cancel(false) && future.isDone()) {
+                                final Connection c = future.get();
+                                if (c != null && c.isOpen()) {
+                                    c.closeSilently();
+                                }
+                            }
                             if (logger.isLoggable(Level.FINER)) {
                                 logger.log(Level.FINER, "failed to get the connection. address=" + key, te);
                             }
@@ -2441,16 +2459,34 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
                                 connection = future.get(connectTimeoutInMillis, TimeUnit.MILLISECONDS);
                             }
                         } catch (InterruptedException ie) {
+                            if (!future.cancel(false) && future.isDone()) {
+                                final Connection c = future.get();
+                                if (c != null && c.isOpen()) {
+                                    c.closeSilently();
+                                }
+                            }
                             if (logger.isLoggable(Level.SEVERE)) {
                                 logger.log(Level.SEVERE, "failed to get the connection in health monitor. address=" + failure, ie);
                             }
                             continue;
                         } catch (ExecutionException ee) {
+                            if (!future.cancel(false) && future.isDone()) {
+                                final Connection c = future.get();
+                                if (c != null && c.isOpen()) {
+                                    c.closeSilently();
+                                }
+                            }
                             if (logger.isLoggable(Level.SEVERE)) {
                                 logger.log(Level.SEVERE, "failed to get the connection in health monitor. address=" + failure, ee);
                             }
                             continue;
                         } catch (TimeoutException te) {
+                            if (!future.cancel(false) && future.isDone()) {
+                                final Connection c = future.get();
+                                if (c != null && c.isOpen()) {
+                                    c.closeSilently();
+                                }
+                            }
                             if (logger.isLoggable(Level.SEVERE)) {
                                 logger.log(Level.SEVERE, "failed to get the connection in health monitor. address=" + failure, te);
                             }
