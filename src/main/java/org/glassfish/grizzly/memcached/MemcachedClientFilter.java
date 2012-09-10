@@ -158,7 +158,7 @@ public class MemcachedClientFilter extends BaseFilter {
 
         final BlockingQueue<MemcachedRequest> requestQueue = requestQueueAttribute.get(connection);
         if (requestQueue == null) {
-            throw new IOException("request queue must be not null");
+            throw new IOException("request queue must not be null");
         }
 
         short keyLength;
@@ -388,12 +388,12 @@ public class MemcachedClientFilter extends BaseFilter {
         }
         final Connection connection = ctx.getConnection();
         if (connection == null) {
-            throw new IOException("connection must be not null. this connection was already closed or not opened");
+            throw new IOException("connection must not be null. this connection was already closed or not opened");
         }
 
         final BlockingQueue<MemcachedRequest> requestQueue = requestQueueAttribute.get(connection);
         if (requestQueue == null) {
-            throw new IOException("request queue must be not null. this connection was already closed or not opened. connection=" + connection);
+            throw new IOException("request queue must not be null. this connection was already closed or not opened. connection=" + connection);
         }
         MemoryManager memoryManager = ctx.getMemoryManager();
         if (memoryManager == null) {
@@ -450,7 +450,7 @@ public class MemcachedClientFilter extends BaseFilter {
             throw new IllegalArgumentException("requests must not be null");
         }
         if (requestQueue == null) {
-            throw new IllegalArgumentException("request queue must be not null");
+            throw new IllegalArgumentException("request queue must not be null");
         }
         if (totalSize < HEADER_LENGTH) {
             throw new IllegalArgumentException("invalid packet size");
@@ -514,7 +514,7 @@ public class MemcachedClientFilter extends BaseFilter {
             throw new IllegalArgumentException("requests must not be null");
         }
         if (requestQueue == null) {
-            throw new IllegalArgumentException("request queue must be not null");
+            throw new IllegalArgumentException("request queue must not be null");
         }
         Buffer resultBuffer = null;
         for (MemcachedRequest request : requests) {
@@ -600,17 +600,17 @@ public class MemcachedClientFilter extends BaseFilter {
                                              final long timeoutInMillis,
                                              final Map<K, V> result) throws InterruptedException, TimeoutException {
         if (connection == null) {
-            throw new IllegalArgumentException("connection must be not null");
+            throw new IllegalArgumentException("connection must not be null");
         }
         if (requests == null) {
-            throw new IllegalArgumentException("requests must be not null");
+            throw new IllegalArgumentException("requests must not be null");
         }
         final int requestLen = requests.length;
         if (requestLen < 1) {
             throw new IllegalArgumentException("requests must include at least one request");
         }
         if (result == null) {
-            throw new IllegalArgumentException("result must be not null");
+            throw new IllegalArgumentException("result must not be null");
         }
 
         Object response;
@@ -660,10 +660,10 @@ public class MemcachedClientFilter extends BaseFilter {
                                        final MemcachedRequest request,
                                        final long timeoutInMillis) throws InterruptedException, TimeoutException {
         if (connection == null) {
-            throw new IllegalArgumentException("connection must be not null");
+            throw new IllegalArgumentException("connection must not be null");
         }
         if (request == null) {
-            throw new IllegalArgumentException("request must be not null");
+            throw new IllegalArgumentException("request must not be null");
         }
         if (request.isNoReply()) {
             throw new IllegalArgumentException("request type is no reply");

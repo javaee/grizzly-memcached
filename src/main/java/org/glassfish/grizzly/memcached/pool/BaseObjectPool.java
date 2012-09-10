@@ -108,7 +108,7 @@ public class BaseObjectPool<K, V> implements ObjectPool<K, V> {
             throw new IllegalStateException("pool has already destroyed");
         }
         if (key == null) {
-            throw new IllegalArgumentException("key must be not null");
+            throw new IllegalArgumentException("key must not be null");
         }
         QueuePool<V> pool = keyedObjectPool.get(key);
         if (pool == null) {
@@ -144,7 +144,7 @@ public class BaseObjectPool<K, V> implements ObjectPool<K, V> {
             throw new IllegalStateException("pool has already destroyed");
         }
         if (key == null) {
-            throw new IllegalArgumentException("key must be not null");
+            throw new IllegalArgumentException("key must not be null");
         }
         final QueuePool<V> pool = keyedObjectPool.get(key);
         if (pool == null) {
@@ -165,7 +165,7 @@ public class BaseObjectPool<K, V> implements ObjectPool<K, V> {
             throw new IllegalStateException("pool already has destroyed");
         }
         if (key == null) {
-            throw new IllegalArgumentException("key must be not null");
+            throw new IllegalArgumentException("key must not be null");
         }
         QueuePool<V> pool = keyedObjectPool.get(key);
         if (pool == null) {
@@ -253,17 +253,17 @@ public class BaseObjectPool<K, V> implements ObjectPool<K, V> {
             throw new IllegalStateException("pool has already destroyed");
         }
         if (pool == null) {
-            throw new IllegalArgumentException("pool must be not null");
+            throw new IllegalArgumentException("pool must not be null");
         }
         if (key == null) {
-            throw new IllegalArgumentException("key must be not null");
+            throw new IllegalArgumentException("key must not be null");
         }
         if (specificSize >= pool.poolSizeHint.incrementAndGet()) {
             try {
                 final V result = factory.createObject(key);
                 if (result == null) {
                     pool.poolSizeHint.decrementAndGet();
-                    throw new IllegalStateException("failed to create the object. the created object must be not null");
+                    throw new IllegalStateException("failed to create the object. the created object must not be null");
                 } else {
                     if (validation) {
                         boolean valid = false;
@@ -305,7 +305,7 @@ public class BaseObjectPool<K, V> implements ObjectPool<K, V> {
             throw new IllegalStateException("pool has already destroyed");
         }
         if (key == null) {
-            throw new IllegalArgumentException("key must be not null");
+            throw new IllegalArgumentException("key must not be null");
         }
         if (value == null) {
             return;
@@ -353,7 +353,7 @@ public class BaseObjectPool<K, V> implements ObjectPool<K, V> {
             throw new IllegalStateException("pool has already destroyed");
         }
         if (key == null) {
-            throw new IllegalArgumentException("key must be not null");
+            throw new IllegalArgumentException("key must not be null");
         }
         if (value == null) {
             return;

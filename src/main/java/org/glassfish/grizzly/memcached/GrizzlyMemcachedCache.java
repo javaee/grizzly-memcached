@@ -227,7 +227,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
                             connectionPoolAttribute.set(connection, connectionPool);
                             return connection;
                         } else {
-                            throw new IllegalStateException("connection must be not null");
+                            throw new IllegalStateException("connection must not be null");
                         }
                     }
 
@@ -1573,10 +1573,10 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
             return null;
         }
         if (connectionPool == null) {
-            throw new IllegalStateException("connection pool must be not null");
+            throw new IllegalStateException("connection pool must not be null");
         }
         if (clientFilter == null) {
-            throw new IllegalStateException("client filter must be not null");
+            throw new IllegalStateException("client filter must not be null");
         }
 
         final MemcachedRequest.Builder builder = MemcachedRequest.Builder.create(false, item != null, false);
@@ -1986,7 +1986,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
                 future.get();
             }
             if (clientFilter == null) {
-                throw new IllegalStateException("client filter must be not null");
+                throw new IllegalStateException("client filter must not be null");
             }
             final Object result = clientFilter.getCorrelatedResponse(connection, request, responseTimeoutInMillis);
             return result instanceof String;
@@ -2013,13 +2013,13 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
 
     private void sendNoReply(final SocketAddress address, final MemcachedRequest request) throws PoolExhaustedException, NoValidObjectException, InterruptedException {
         if (address == null) {
-            throw new IllegalArgumentException("address must be not null");
+            throw new IllegalArgumentException("address must not be null");
         }
         if (request == null) {
-            throw new IllegalArgumentException("request must be not null");
+            throw new IllegalArgumentException("request must not be null");
         }
         if (connectionPool == null) {
-            throw new IllegalStateException("connection pool must be not null");
+            throw new IllegalStateException("connection pool must not be null");
         }
 
         final Connection<SocketAddress> connection;
@@ -2092,10 +2092,10 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
 
     private boolean sendNoReplySafely(final Connection<SocketAddress> connection, final MemcachedRequest request) {
         if (connection == null) {
-            throw new IllegalArgumentException("connection must be not null");
+            throw new IllegalArgumentException("connection must not be null");
         }
         if (request == null) {
-            throw new IllegalArgumentException("request must be not null");
+            throw new IllegalArgumentException("request must not be null");
         }
         if (request.isNoReply()) {
             GrizzlyFuture future = connection.write(new MemcachedRequest[]{request});
@@ -2127,10 +2127,10 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
                         final long writeTimeoutInMillis,
                         final long responseTimeoutInMillis) throws TimeoutException, InterruptedException, PoolExhaustedException, NoValidObjectException {
         if (address == null) {
-            throw new IllegalArgumentException("address must be not null");
+            throw new IllegalArgumentException("address must not be null");
         }
         if (request == null) {
-            throw new IllegalArgumentException("request must be not null");
+            throw new IllegalArgumentException("request must not be null");
         }
         if (request.isNoReply()) {
             throw new IllegalStateException("request type is no reply");
@@ -2326,10 +2326,10 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
             return null;
         }
         if (connectionPool == null) {
-            throw new IllegalStateException("connection pool must be not null");
+            throw new IllegalStateException("connection pool must not be null");
         }
         if (clientFilter == null) {
-            throw new IllegalStateException("client filter must be not null");
+            throw new IllegalStateException("client filter must not be null");
         }
 
         final boolean isMulti = (result != null);
@@ -2433,7 +2433,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
         @Override
         public void run() {
             if (transport == null) {
-                throw new IllegalStateException("transport must be not null");
+                throw new IllegalStateException("transport must not be null");
             }
             if (!running.compareAndSet(false, true)) {
                 return;

@@ -201,7 +201,7 @@ public class BufferWrapper<T> implements Cacheable {
      */
     public static <T> BufferWrapper<T> wrap(final T origin, MemoryManager memoryManager) throws IllegalArgumentException {
         if (origin == null) {
-            throw new IllegalArgumentException("object must be not null");
+            throw new IllegalArgumentException("object must not be null");
         }
         if (origin instanceof Buffer) {
             return create(origin, (Buffer) origin, BufferWrapper.BufferType.NONE);
