@@ -141,18 +141,18 @@ public class CacheServerListBarrierListener implements BarrierListener {
             final Set<SocketAddress> remoteCacheServers = getAddressesFromStringList(remoteDataString);
             if (!remoteCacheServers.isEmpty()) {
                 if (cache != null) {
-                    final Set<SocketAddress> added = new HashSet<SocketAddress>();
-                    final Set<SocketAddress> removed = new HashSet<SocketAddress>();
-                    for (final SocketAddress local : localCacheServerSet) {
-                        if (!remoteCacheServers.remove(local)) {
-                            removed.add(local);
+                    final Set<SocketAddress> shouldBeAdded = new HashSet<SocketAddress>();
+                    final Set<SocketAddress> shouldBeRemoved = new HashSet<SocketAddress>();
+                    for (final SocketAddress remoteServer : remoteCacheServers) {
+                        if (!localCacheServerSet.remove(remoteServer)) {
+                            shouldBeAdded.add(remoteServer);
                         }
                     }
-                    added.addAll(remoteCacheServers);
-                    for (final SocketAddress address : added) {
+                    shouldBeRemoved.addAll(localCacheServerSet);
+                    for (final SocketAddress address : shouldBeAdded) {
                         cache.addServer(address);
                     }
-                    for (final SocketAddress address : removed) {
+                    for (final SocketAddress address : shouldBeRemoved) {
                         cache.removeServer(address);
                     }
                     // refresh local
