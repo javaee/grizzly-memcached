@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,9 +49,10 @@ import org.glassfish.grizzly.memcached.zookeeper.ZooKeeperConfig;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransportBuilder;
 import org.glassfish.grizzly.strategies.SameThreadIOStrategy;
+import org.glassfish.grizzly.utils.DataStructures;
 
 import java.io.IOException;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
@@ -70,8 +71,7 @@ public class GrizzlyMemcachedCacheManager implements CacheManager {
 
     private static final Logger logger = Grizzly.logger(GrizzlyMemcachedCacheManager.class);
 
-    private final ConcurrentHashMap<String, GrizzlyMemcachedCache<?, ?>> caches =
-            new ConcurrentHashMap<String, GrizzlyMemcachedCache<?, ?>>();
+    private final ConcurrentMap<String, GrizzlyMemcachedCache<?, ?>> caches = DataStructures.getConcurrentMap();
     private final TCPNIOTransport transport;
     private final boolean isExternalTransport;
     private final AtomicBoolean shutdown = new AtomicBoolean(false);

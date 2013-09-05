@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -62,6 +62,7 @@ import org.glassfish.grizzly.memcached.zookeeper.ZKClient;
 import org.glassfish.grizzly.memcached.zookeeper.ZooKeeperSupportCache;
 import org.glassfish.grizzly.nio.transport.TCPNIOConnectorHandler;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
+import org.glassfish.grizzly.utils.DataStructures;
 
 import java.io.UnsupportedEncodingException;
 import java.net.SocketAddress;
@@ -71,7 +72,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -1642,7 +1642,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
             while (true) {
                 final ValueWithKey<String, String> value;
                 try {
-                    value = (ValueWithKey<String, String>) clientFilter.getCorrelatedResponse(connection, request, responseTimeoutInMillis);
+                    value = clientFilter.getCorrelatedResponse(connection, request, responseTimeoutInMillis);
                 } catch (TimeoutException te) {
                     if (logger.isLoggable(Level.SEVERE)) {
                         logger.log(Level.SEVERE, "failed to get the stats. timeout=" + responseTimeoutInMillis + "ms", te);
@@ -2413,8 +2413,8 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
 
     private class HealthMonitorTask implements Runnable {
 
-        private final Map<SocketAddress, Boolean> failures = new ConcurrentHashMap<SocketAddress, Boolean>();
-        private final Map<SocketAddress, Boolean> revivals = new ConcurrentHashMap<SocketAddress, Boolean>();
+        private final Map<SocketAddress, Boolean> failures = DataStructures.getConcurrentMap();
+        private final Map<SocketAddress, Boolean> revivals = DataStructures.getConcurrentMap();
         private final AtomicBoolean running = new AtomicBoolean();
 
         public boolean failure(final SocketAddress address) {
@@ -2655,9 +2655,9 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
         /**
          * Set health monitor's interval
          * <p/>
-         * This cache will schedule {@link HealthMonitorTask} with this interval.
-         * {@link HealthMonitorTask} will check the failure servers periodically and detect the revived server.
-         * If the given parameter is negative, this cache never schedules {@link HealthMonitorTask}
+         * This cache will schedule HealthMonitorTask with this interval.
+         * HealthMonitorTask will check the failure servers periodically and detect the revived server.
+         * If the given parameter is negative, this cache never schedules HealthMonitorTask
          * so this behavior is similar to seting {@code failover} to be false.
          * Default is 60.
          *

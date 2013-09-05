@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,7 +44,6 @@ import org.glassfish.grizzly.Buffer;
 import org.glassfish.grizzly.Connection;
 import org.glassfish.grizzly.Grizzly;
 import org.glassfish.grizzly.attributes.Attribute;
-import org.glassfish.grizzly.attributes.NullaryFunction;
 import org.glassfish.grizzly.filterchain.BaseFilter;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.filterchain.NextAction;
@@ -53,6 +52,7 @@ import org.glassfish.grizzly.memory.Buffers;
 import org.glassfish.grizzly.memory.CompositeBuffer;
 import org.glassfish.grizzly.memory.MemoryManager;
 import org.glassfish.grizzly.utils.DataStructures;
+import org.glassfish.grizzly.utils.NullaryFunction;
 
 import java.io.IOException;
 import java.net.SocketAddress;
@@ -110,7 +110,7 @@ public class MemcachedClientFilter extends BaseFilter {
                     });
 
     private final Attribute<BlockingQueue<MemcachedRequest>> requestQueueAttribute =
-            Grizzly.DEFAULT_ATTRIBUTE_BUILDER.createAttribute("MemcachedClientFilter.RequestQueue",
+            Grizzly.DEFAULT_ATTRIBUTE_BUILDER.<BlockingQueue<MemcachedRequest>>createAttribute("MemcachedClientFilter.RequestQueue",
                     new NullaryFunction<BlockingQueue<MemcachedRequest>>() {
                         public BlockingQueue<MemcachedRequest> evaluate() {
                             return DataStructures.getLTQInstance();

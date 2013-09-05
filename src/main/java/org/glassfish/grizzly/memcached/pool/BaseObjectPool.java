@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,7 +44,7 @@ import org.glassfish.grizzly.utils.DataStructures;
 
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -57,7 +57,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * The basic implementation of {@link ObjectPool} for high performance and scalability
  *
  * Example of use:
- * @see org.glassfish.grizzly.memcached.BaseObjectPoolTest's test codes
+ * See org.glassfish.grizzly.memcached.pool.BaseObjectPoolTest's test codes
  *
  * This class should be thread-safe.
  *
@@ -76,8 +76,8 @@ public class BaseObjectPool<K, V> implements ObjectPool<K, V> {
     private final boolean disposable;
     private final long keepAliveTimeoutInSecs;
 
-    private final ConcurrentHashMap<K, QueuePool<V>> keyedObjectPool = new ConcurrentHashMap<K, QueuePool<V>>();
-    private final ConcurrentHashMap<V, K> managedActiveObjects = new ConcurrentHashMap<V, K>();
+    private final ConcurrentMap<K, QueuePool<V>> keyedObjectPool = DataStructures.getConcurrentMap();
+    private final ConcurrentMap<V, K> managedActiveObjects = DataStructures.getConcurrentMap();
     private final AtomicBoolean destroyed = new AtomicBoolean();
     private final ScheduledExecutorService scheduledExecutor;
     private final ScheduledFuture<?> scheduledFuture;
@@ -675,9 +675,9 @@ public class BaseObjectPool<K, V> implements ObjectPool<K, V> {
         /**
          * Set the KeepAliveTimeout of this pool
          * <p/>
-         * This pool will schedule {@link EvictionTask} with this interval.
-         * {@link EvictionTask} will evict idle objects if this pool has more than min objects.
-         * If the given parameter is negative, this pool never schedules {@link EvictionTask}.
+         * This pool will schedule EvictionTask with this interval.
+         * EvictionTask will evict idle objects if this pool has more than min objects.
+         * If the given parameter is negative, this pool never schedules EvictionTask.
          * Default is 1800.
          *
          * @param keepAliveTimeoutInSecs KeepAliveTimeout in seconds
