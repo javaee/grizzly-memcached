@@ -94,7 +94,7 @@
         <url>http://grizzly.java.net</url>
     </organization>
     <properties>
-        <grizzly-framework-version>2.3.5</grizzly-framework-version>
+        <grizzly-framework-version>2.3.6</grizzly-framework-version>
         <zookeeper-version>3.3.4</zookeeper-version>
     </properties>
     <build>
