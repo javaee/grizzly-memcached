@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -288,6 +289,11 @@ public class CacheServerListBarrierListenerTest {
         @Override
         public boolean isInServerList(final SocketAddress serverAddress) {
             return localCacheServerSet.contains(serverAddress);
+        }
+
+        @Override
+        public List<SocketAddress> getCurrentServerList() {
+            return new ArrayList<SocketAddress>(localCacheServerSet);
         }
 
         @Override

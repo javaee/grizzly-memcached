@@ -125,8 +125,4 @@ public enum ResponseStatus {
                 throw new IllegalArgumentException("invalid status");
         }
     }
-
-    public static boolean isError(final ResponseStatus status) {
-        return status != ResponseStatus.No_Error;
-    }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,7 @@
 package org.glassfish.grizzly.memcached;
 
 import java.net.SocketAddress;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -94,6 +95,16 @@ public interface MemcachedCache<K, V> extends Commands<K, V>, Cache<K, V> {
 
     public V gat(final K key, final int expirationInSecs, final boolean noReply, final long writeTimeoutInMillis, final long responseTimeoutInMillis);
 
+    /**
+     * delete the item with the given key in memcached
+     *
+     * @param key item's key
+     * @param noReply whether you need to receive a reply or not. true means the quiet operation(no reply).
+     * @param writeTimeoutInMillis write timeout
+     * @param responseTimeoutInMillis response timeout
+     * @return true if the key and the corresponding item is deleted successfully in memcached. false if the deletion is failed(ex. timeout, io failures, ...).
+     * Note) true will be returned when the key doesn't exist in memcached(since v1.3.2)
+     */
     public boolean delete(final K key, final boolean noReply, final long writeTimeoutInMillis, final long responseTimeoutInMillis);
 
     public Map<K, Boolean> deleteMulti(final Set<K> keys);
@@ -149,4 +160,11 @@ public interface MemcachedCache<K, V> extends Commands<K, V>, Cache<K, V> {
      * @return true if this cache already contains the given {@code serverAddress}
      */
     public boolean isInServerList(final SocketAddress serverAddress);
+
+    /**
+     * Get current server list
+     *
+     * @return current server list or empty list if there are no alive servers
+     */
+    public List<SocketAddress> getCurrentServerList();
 }

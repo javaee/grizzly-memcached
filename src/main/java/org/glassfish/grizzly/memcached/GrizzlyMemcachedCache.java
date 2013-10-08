@@ -67,6 +67,7 @@ import org.glassfish.grizzly.utils.DataStructures;
 import java.io.UnsupportedEncodingException;
 import java.net.SocketAddress;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -148,7 +149,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
             Grizzly.DEFAULT_ATTRIBUTE_BUILDER.createAttribute(CONNECTION_POOL_ATTRIBUTE_NAME);
     private final ObjectPool<SocketAddress, Connection<SocketAddress>> connectionPool;
 
-    private final Set<SocketAddress> initialServers;
+    private final Set<SocketAddress> servers;
 
     private final long healthMonitorIntervalInSecs;
     private final ScheduledFuture<?> scheduledFuture;
@@ -259,7 +260,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
         this.failover = builder.failover;
         this.retryCount = builder.retryCount;
 
-        this.initialServers = builder.servers;
+        this.servers = builder.servers;
 
         if (failover && healthMonitorIntervalInSecs > 0) {
             healthMonitorTask = new HealthMonitorTask();
@@ -272,7 +273,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
         }
 
         this.zkClient = builder.zkClient;
-        this.zkListener = new CacheServerListBarrierListener(this, initialServers);
+        this.zkListener = new CacheServerListBarrierListener(this, servers);
     }
 
     /**
@@ -293,10 +294,8 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
         if (clientFilter == null) {
             throw new IllegalStateException("MemcachedClientFilter should not be null");
         }
-        if (initialServers != null) {
-            for (SocketAddress address : initialServers) {
-                addServer(address);
-            }
+        for (final SocketAddress address : servers) {
+            addServer(address);
         }
         if (zkClient != null) {
             // need to initialize the remote server with local initalServers if the remote server data is empty?
@@ -316,9 +315,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
         if (scheduledExecutor != null) {
             scheduledExecutor.shutdown();
         }
-        if (initialServers != null) {
-            initialServers.clear();
-        }
+        servers.clear();
         consistentHash.clear();
         if (connectionPool != null) {
             connectionPool.destroy();
@@ -359,6 +356,8 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
             }
         }
         consistentHash.add(serverAddress);
+        servers.add(serverAddress);
+
         if (logger.isLoggable(Level.INFO)) {
             logger.log(Level.INFO, "added the server to the consistent hash successfully. address={0}", serverAddress);
         }
@@ -389,12 +388,14 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
         if (!forcibly) {
             if (healthMonitorTask != null && healthMonitorTask.failure(serverAddress)) {
                 consistentHash.remove(serverAddress);
+                servers.remove(serverAddress);
                 if (logger.isLoggable(Level.INFO)) {
                     logger.log(Level.INFO, "removed the server from the consistent hash successfully. address={0}", serverAddress);
                 }
             }
         } else {
             consistentHash.remove(serverAddress);
+            servers.remove(serverAddress);
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, "removed the server from the consistent hash successfully. address={0}", serverAddress);
             }
@@ -407,6 +408,18 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
     @Override
     public boolean isInServerList(final SocketAddress serverAddress) {
         return consistentHash.hasValue(serverAddress);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<SocketAddress> getCurrentServerList() {
+        if (!servers.isEmpty()) {
+            return new ArrayList<SocketAddress>(servers);
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     /**
@@ -2528,7 +2541,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
         private final String cacheName;
         private final GrizzlyMemcachedCacheManager manager;
         private final TCPNIOTransport transport;
-        private Set<SocketAddress> servers;
+        private Set<SocketAddress> servers = Collections.synchronizedSet(new HashSet<SocketAddress>());
         private long connectTimeoutInMillis = 5000; // 5secs
         private long writeTimeoutInMillis = 5000; // 5secs
         private long responseTimeoutInMillis = 10000; // 10secs
@@ -2715,7 +2728,9 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
          * @return this builder
          */
         public Builder<K, V> servers(final Set<SocketAddress> servers) {
-            this.servers = new HashSet<SocketAddress>(servers);
+            if (servers != null && !servers.isEmpty()) {
+                this.servers.addAll(servers);
+            }
             return this;
         }
 
@@ -2755,7 +2770,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
                 ", writeTimeoutInMillis=" + writeTimeoutInMillis +
                 ", responseTimeoutInMillis=" + responseTimeoutInMillis +
                 ", connectionPool=" + connectionPool +
-                ", initialServers=" + initialServers +
+                ", servers=" + servers +
                 ", healthMonitorIntervalInSecs=" + healthMonitorIntervalInSecs +
                 ", failover=" + failover +
                 ", consistentHash=" + consistentHash +

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,6 +55,7 @@ import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -86,7 +87,11 @@ public class BasicCommandTest {
         // ensure "name" doesn't exist
         userCache.delete("name", false);
 
-        boolean result = userCache.add("name", "foo", expirationTimeoutInSec, false);
+        // "key not found" should be true
+        boolean result = userCache.delete("name", false);
+        Assert.assertTrue(result);
+
+        result = userCache.add("name", "foo", expirationTimeoutInSec, false);
         Assert.assertTrue(result);
         String value = userCache.get("name", false);
         Assert.assertEquals("foo", value);
@@ -562,7 +567,7 @@ public class BasicCommandTest {
             // always true
             Assert.assertTrue(success);
         }
-        Assert.assertEquals(multiSize, result.size());
+        Assert.assertEquals(multiSize + 1, result.size());
 
         for (int i = 0; i < multiSize; i++) {
             final String key = "name" + i;
@@ -721,7 +726,7 @@ public class BasicCommandTest {
         for (Boolean success : result.values()) {
             Assert.assertTrue(success);
         }
-        Assert.assertEquals(getsResult.size() - 1, result.size());
+        Assert.assertEquals(getsResult.size(), result.size());
 
         manager.shutdown();
     }
@@ -906,6 +911,26 @@ public class BasicCommandTest {
         // clear
         result = userCache.delete(keyName, false);
         Assert.assertTrue(result);
+
+        manager.shutdown();
+    }
+
+    @Test
+    public void testCurrentServerList() {
+        final GrizzlyMemcachedCacheManager manager = new GrizzlyMemcachedCacheManager.Builder().build();
+        final GrizzlyMemcachedCache.Builder<String, String> builder = manager.createCacheBuilder("user");
+        final MemcachedCache<String, String> userCache = builder.build();
+        SocketAddress address1 = new InetSocketAddress(11211);
+        SocketAddress address2 = new InetSocketAddress("127.0.0.1", 11211);
+        userCache.addServer(address1);
+        userCache.addServer(address2);
+
+        List<SocketAddress> current = userCache.getCurrentServerList();
+        Assert.assertNotNull(current);
+        Assert.assertTrue(current.size() == 2);
+        userCache.removeServer(address2);
+        current = userCache.getCurrentServerList();
+        Assert.assertTrue(current.size() == 1);
 
         manager.shutdown();
     }

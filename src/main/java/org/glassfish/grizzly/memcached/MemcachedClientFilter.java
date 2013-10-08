@@ -320,7 +320,7 @@ public class MemcachedClientFilter extends BaseFilter {
                         response.setResult(sentRequest.getOriginKey(), ParsingStatus.DONE);
                         if (sentRequest.disposed.compareAndSet(false, true)) {
                             sentRequest.response = response.getResult();
-                            sentRequest.responseStatus = response.getStatus();
+                            sentRequest.isError = response.isError();
                             sentRequest.notify.countDown();
                         }
                     } else {
@@ -328,7 +328,7 @@ public class MemcachedClientFilter extends BaseFilter {
                         response.setResult(sentRequest.getOriginKey(), ParsingStatus.DONE);
                         if (!sentRequest.disposed.get()) {
                             sentRequest.response = response.getResult();
-                            sentRequest.responseStatus = response.getStatus();
+                            sentRequest.isError = response.isError();
                             sentRequest.notify.countDown();
                         }
                     }
@@ -366,7 +366,7 @@ public class MemcachedClientFilter extends BaseFilter {
                     sentRequest = requestQueue.remove();
                     response.setResult(sentRequest.getOriginKey(), ParsingStatus.NO_REPLY);
                     sentRequest.response = response.getResult();
-                    sentRequest.responseStatus = ResponseStatus.No_Error;
+                    sentRequest.isError = Boolean.FALSE;
                     sentRequest.notify.countDown();
                     input.reset();
 
@@ -614,40 +614,40 @@ public class MemcachedClientFilter extends BaseFilter {
         }
 
         Object response;
-        ResponseStatus responseStatus;
+        Boolean isError;
         final int lastIndex = requestLen - 1;
         // wait for receiving last packet
         if (timeoutInMillis < 0) {
             requests[lastIndex].notify.await();
             response = requests[lastIndex].response;
-            responseStatus = requests[lastIndex].responseStatus;
+            isError = requests[lastIndex].isError;
         } else {
             requests[lastIndex].notify.await(timeoutInMillis, TimeUnit.MILLISECONDS);
             response = requests[lastIndex].response;
-            responseStatus = requests[lastIndex].responseStatus;
+            isError = requests[lastIndex].isError;
         }
-        if (response == null && responseStatus == null) {
+        if (response == null && isError == null) {
             throw new TimeoutException("timed out while getting the response");
         }
-        if (!ResponseStatus.isError(responseStatus)) {
+        if (isError != null && !isError) {
             result.put((K) requests[lastIndex].getOriginKey(), (V) response);
         } else {
             if (logger.isLoggable(Level.FINE)) {
-                logger.log(Level.FINE, "error status code={0}, status msg={1}, op={2}, key={3}",
-                        new Object[]{responseStatus, responseStatus.message(), requests[lastIndex].getOp(), requests[lastIndex].getOriginKey()});
+                logger.log(Level.FINE, "error status op={0}, key={1}",
+                        new Object[]{requests[lastIndex].getOp(), requests[lastIndex].getOriginKey()});
             }
         }
         // collect previous packets
         for (int i = 0; i < requestLen - 1; i++) {
             response = requests[i].response;
-            responseStatus = requests[i].responseStatus;
+            isError = requests[i].isError;
             if (response != null) {
-                if (!ResponseStatus.isError(responseStatus)) {
+                if (isError != null && !isError) {
                     result.put((K) requests[i].getOriginKey(), (V) response);
                 } else {
                     if (logger.isLoggable(Level.FINE)) {
-                        logger.log(Level.FINE, "error status code={0}, status msg={1}, op={2}, key={3}",
-                                new Object[]{responseStatus, responseStatus.message(), requests[i].getOp(), requests[i].getOriginKey()});
+                        logger.log(Level.FINE, "error status op={0}, key={1}",
+                                new Object[]{requests[i].getOp(), requests[i].getOriginKey()});
                     }
                 }
             }
@@ -669,28 +669,28 @@ public class MemcachedClientFilter extends BaseFilter {
             throw new IllegalArgumentException("request type is no reply");
         }
 
-        Object response;
-        ResponseStatus responseStatus;
+        final Object response;
+        final Boolean isError;
         if (timeoutInMillis < 0) {
             request.notify.await();
             response = request.response;
-            responseStatus = request.responseStatus;
+            isError = request.isError;
         } else {
             request.notify.await(timeoutInMillis, TimeUnit.MILLISECONDS);
             response = request.response;
-            responseStatus = request.responseStatus;
+            isError = request.isError;
         }
 
-        if (response == null && responseStatus == null) {
+        if (response == null && isError == null) {
             throw new TimeoutException("timed out while getting the response");
         }
         final V result;
-        if (!ResponseStatus.isError(responseStatus)) {
+        if (isError != null && !isError) {
             result = (V) response;
         } else {
             result = null;
             if (logger.isLoggable(Level.FINE)) {
-                logger.log(Level.FINE, "error status code={0}, status msg={1}, op={2}, key={3}", new Object[]{responseStatus, responseStatus.message(), request.getOp(), request.getOriginKey()});
+                logger.log(Level.FINE, "error status op={0}, key={1}", new Object[]{request.getOp(), request.getOriginKey()});
             }
         }
         return result;
