@@ -90,12 +90,14 @@ public class BufferWrapper<T> implements Cacheable {
 
         public final int flags;
 
-        private BufferType(int flags) {
-            this.flags = flags;
+        private BufferType(final int typeFlags) {
+            this.flags = typeFlags;
         }
 
-        public static BufferType getBufferType(final int type) {
-            switch (type) {
+        public static BufferType getBufferType(final int flags) {
+            // use only 2 bytes in flags
+            final short typeFlags = (short) (flags & 0xFFFF);
+            switch (typeFlags) {
                 case 0:
                     return NONE;
                 case 1:

@@ -183,7 +183,7 @@ public class GrizzlyMemcachedCacheManager implements CacheManager {
         caches.clear();
         if (!isExternalTransport && transport != null) {
             try {
-                transport.stop();
+                transport.shutdownNow();
             } catch (IOException ie) {
                 if (logger.isLoggable(Level.INFO)) {
                     logger.log(Level.INFO, "failed to stop the transport", ie);
