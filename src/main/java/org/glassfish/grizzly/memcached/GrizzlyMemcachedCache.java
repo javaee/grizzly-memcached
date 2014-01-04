@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,6 +58,7 @@ import org.glassfish.grizzly.memcached.pool.PoolExhaustedException;
 import org.glassfish.grizzly.memcached.pool.PoolableObjectFactory;
 import org.glassfish.grizzly.memcached.zookeeper.BarrierListener;
 import org.glassfish.grizzly.memcached.zookeeper.CacheServerListBarrierListener;
+import org.glassfish.grizzly.memcached.zookeeper.PreferRemoteConfigBarrierListener;
 import org.glassfish.grizzly.memcached.zookeeper.ZKClient;
 import org.glassfish.grizzly.memcached.zookeeper.ZooKeeperSupportCache;
 import org.glassfish.grizzly.nio.transport.TCPNIOConnectorHandler;
@@ -158,6 +159,8 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
 
     private final boolean failover;
     private final int retryCount;
+
+    private final boolean preferRemoteConfig;
 
     private final ConsistentHashStore<SocketAddress> consistentHash = new ConsistentHashStore<SocketAddress>();
 
@@ -272,8 +275,13 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
             scheduledFuture = null;
         }
 
+        this.preferRemoteConfig = builder.preferRemoteConfig;
+        if (this.preferRemoteConfig) {
+            this.zkListener = new PreferRemoteConfigBarrierListener(this, servers);
+        } else {
+            this.zkListener = new CacheServerListBarrierListener(this, servers);
+        }
         this.zkClient = builder.zkClient;
-        this.zkListener = new CacheServerListBarrierListener(this, servers);
     }
 
     /**
@@ -294,13 +302,23 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
         if (clientFilter == null) {
             throw new IllegalStateException("MemcachedClientFilter should not be null");
         }
-        for (final SocketAddress address : servers) {
-            addServer(address);
-        }
         if (zkClient != null) {
+            if (!preferRemoteConfig) {
+                for (final SocketAddress address : servers) {
+                    addServer(address);
+                }
+            } else {
+                if (logger.isLoggable(Level.INFO)) {
+                    logger.log(Level.INFO, "local config has been ignored because preferRemoteConfig is true. servers={0}", servers);
+                }
+            }
             // need to initialize the remote server with local initalServers if the remote server data is empty?
             // currently, do nothing
             zooKeeperServerListPath = zkClient.registerBarrier(cacheName, zkListener, null);
+        } else {
+            for (final SocketAddress address : servers) {
+                addServer(address);
+            }
         }
     }
 
@@ -2549,6 +2567,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
         private long healthMonitorIntervalInSecs = 60; // 1 min
         private boolean failover = true;
         private int retryCount = 1;
+        private boolean preferRemoteConfig = false;
 
         // connection pool config
         private int minConnectionPerServer = 5;
@@ -2759,21 +2778,30 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
             this.retryCount = retryCount;
             return this;
         }
+
+        public Builder<K, V> preferRemoteConfig(final boolean preferRemoteConfig) {
+            this.preferRemoteConfig = preferRemoteConfig;
+            return this;
+        }
     }
 
     @Override
     public String toString() {
-        return "GrizzlyMemcachedCache{" +
-                "cacheName=" + cacheName +
-                ", transport=" + transport +
-                ", connectTimeoutInMillis=" + connectTimeoutInMillis +
-                ", writeTimeoutInMillis=" + writeTimeoutInMillis +
-                ", responseTimeoutInMillis=" + responseTimeoutInMillis +
-                ", connectionPool=" + connectionPool +
-                ", servers=" + servers +
-                ", healthMonitorIntervalInSecs=" + healthMonitorIntervalInSecs +
-                ", failover=" + failover +
-                ", consistentHash=" + consistentHash +
-                '}';
+        final StringBuilder sb = new StringBuilder("GrizzlyMemcachedCache{");
+        sb.append("cacheName='").append(cacheName).append('\'');
+        sb.append(", transport=").append(transport);
+        sb.append(", connectTimeoutInMillis=").append(connectTimeoutInMillis);
+        sb.append(", writeTimeoutInMillis=").append(writeTimeoutInMillis);
+        sb.append(", responseTimeoutInMillis=").append(responseTimeoutInMillis);
+        sb.append(", connectionPool=").append(connectionPool);
+        sb.append(", servers=").append(servers);
+        sb.append(", healthMonitorIntervalInSecs=").append(healthMonitorIntervalInSecs);
+        sb.append(", failover=").append(failover);
+        sb.append(", retryCount=").append(retryCount);
+        sb.append(", preferRemoteConfig=").append(preferRemoteConfig);
+        sb.append(", zkListener=").append(zkListener);
+        sb.append(", zooKeeperServerListPath='").append(zooKeeperServerListPath).append('\'');
+        sb.append('}');
+        return sb.toString();
     }
 }

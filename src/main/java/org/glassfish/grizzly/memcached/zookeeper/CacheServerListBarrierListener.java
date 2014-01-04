@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -64,18 +64,14 @@ public class CacheServerListBarrierListener implements BarrierListener {
     private static final Logger logger = Grizzly.logger(CacheServerListBarrierListener.class);
     public static final String DEFAULT_SERVER_LIST_CHARSET = "UTF-8";
 
-    private final String cacheName;
-    private final MemcachedCache cache;
+    protected final MemcachedCache cache;
+    protected final String cacheName;
     private final Set<SocketAddress> localCacheServerSet = new CopyOnWriteArraySet<SocketAddress>();
     private final List<BarrierListener> customListenerList = new CopyOnWriteArrayList<BarrierListener>();
 
     public CacheServerListBarrierListener(final MemcachedCache cache, final Set<SocketAddress> cacheServerSet) {
         this.cache = cache;
-        if (this.cache != null) {
-            cacheName = this.cache.getName();
-        } else {
-            cacheName = null;
-        }
+        this.cacheName = cache.getName();
         if (cacheServerSet != null) {
             this.localCacheServerSet.addAll(cacheServerSet);
         }
@@ -210,7 +206,6 @@ public class CacheServerListBarrierListener implements BarrierListener {
     public String toString() {
         return "CacheServerListBarrierListener{" +
                 "cacheName='" + cacheName + '\'' +
-                ", cache=" + cache +
                 ", localCacheServerSet=" + localCacheServerSet +
                 ", customListenerList=" + customListenerList +
                 '}';
