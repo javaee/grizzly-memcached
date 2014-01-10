@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -587,6 +587,9 @@ public class MemcachedClientFilter extends BaseFilter {
             if (connectionPool != null) {
                 try {
                     connectionPool.removeObject(connection.getPeerAddress(), connection);
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.log(Level.FINE, "the connection has been removed in pool. connection={0}", connection);
+                    }
                 } catch (Exception ignore) {
                 }
             }

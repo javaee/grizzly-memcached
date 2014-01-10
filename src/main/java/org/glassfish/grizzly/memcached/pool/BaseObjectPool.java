@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,7 @@
 
 package org.glassfish.grizzly.memcached.pool;
 
+import org.glassfish.grizzly.Grizzly;
 import org.glassfish.grizzly.utils.DataStructures;
 
 import java.util.Map;
@@ -52,6 +53,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The basic implementation of {@link ObjectPool} for high performance and scalability
@@ -64,6 +67,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Bongjae Chang
  */
 public class BaseObjectPool<K, V> implements ObjectPool<K, V> {
+
+    private static final Logger logger = Grizzly.logger(BaseObjectPool.class);
 
     // retry counts for borrowing an object if it is not valid
     private static final int MAX_VALIDATION_RETRY_COUNT = 3;
@@ -360,7 +365,10 @@ public class BaseObjectPool<K, V> implements ObjectPool<K, V> {
         }
         final K managed = managedActiveObjects.remove(value);
         final QueuePool<V> pool = keyedObjectPool.get(key);
-        if (pool == null || managed == null) {
+        if (pool == null) {
+            if (logger.isLoggable(Level.FINEST)) {
+                logger.log(Level.FINEST, "the pool was not found. managed={0}, key={1}, value={2}", new Object[]{managed, key, value});
+            }
             try {
                 factory.destroyObject(key, value);
             } catch (Exception ignore) {
@@ -368,7 +376,11 @@ public class BaseObjectPool<K, V> implements ObjectPool<K, V> {
             return;
         }
 
-        pool.queue.remove(value);
+        final boolean removed = pool.queue.remove(value);
+        if (logger.isLoggable(Level.FINEST)) {
+            logger.log(Level.FINEST, "pool.queue.remove={0}, key={1}, value={2}", new Object[]{removed, key, value});
+        }
+
         try {
             factory.destroyObject(key, value);
         } catch (Exception ignore) {

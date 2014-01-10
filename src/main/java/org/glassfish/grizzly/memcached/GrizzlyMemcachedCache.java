@@ -158,7 +158,6 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
     private final ScheduledExecutorService scheduledExecutor;
 
     private final boolean failover;
-    private final int retryCount;
 
     private final boolean preferRemoteConfig;
 
@@ -243,6 +242,9 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
                             if (attributeHolder != null) {
                                 attributeHolder.removeAttribute(CONNECTION_POOL_ATTRIBUTE_NAME);
                             }
+                            if (logger.isLoggable(Level.FINEST)) {
+                                logger.log(Level.FINEST, "the connection has been destroyed. key={0}, value={1}", new Object[]{key, value});
+                            }
                         }
                     }
 
@@ -261,7 +263,6 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
         connectionPool = connectionPoolBuilder.build();
 
         this.failover = builder.failover;
-        this.retryCount = builder.retryCount;
 
         this.servers = builder.servers;
 
@@ -1699,13 +1700,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
             }
             return stats;
         } finally {
-            try {
-                connectionPool.returnObject(address, connection);
-            } catch (Exception e) {
-                if (logger.isLoggable(Level.SEVERE)) {
-                    logger.log(Level.SEVERE, "failed to return the connection. address=" + address + ", connection=" + connection, e);
-                }
-            }
+            returnConnectionSafely(address, connection);
         }
     }
 
@@ -2077,13 +2072,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
             connection.write(new MemcachedRequest[]{request}, new CompletionHandler<WriteResult<MemcachedRequest[], SocketAddress>>() {
                 @Override
                 public void cancelled() {
-                    try {
-                        connectionPool.returnObject(address, connection);
-                    } catch (Exception e) {
-                        if (logger.isLoggable(Level.SEVERE)) {
-                            logger.log(Level.SEVERE, "failed to return the connection. address=" + address + ", connection=" + connection, e);
-                        }
-                    }
+                    returnConnectionSafely(address, connection);
                     if (logger.isLoggable(Level.SEVERE)) {
                         logger.log(Level.SEVERE, "failed to send the request. request={0}, connection={1}", new Object[]{request, connection});
                     }
@@ -2095,7 +2084,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
                         connectionPool.removeObject(address, connection);
                     } catch (Exception e) {
                         if (logger.isLoggable(Level.SEVERE)) {
-                            logger.log(Level.SEVERE, "failed to return the connection. address=" + address + ", connection=" + connection, e);
+                            logger.log(Level.SEVERE, "failed to remove the connection. address=" + address + ", connection=" + connection, e);
                         }
                     }
                     if (logger.isLoggable(Level.SEVERE)) {
@@ -2105,13 +2094,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
 
                 @Override
                 public void completed(WriteResult<MemcachedRequest[], SocketAddress> result) {
-                    try {
-                        connectionPool.returnObject(address, connection);
-                    } catch (Exception e) {
-                        if (logger.isLoggable(Level.SEVERE)) {
-                            logger.log(Level.SEVERE, "failed to return the connection. address=" + address + ", connection=" + connection, e);
-                        }
-                    }
+                    returnConnectionSafely(address, connection);
                 }
 
                 @Override
@@ -2156,7 +2139,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
     private Object send(final SocketAddress address,
                         final MemcachedRequest request,
                         final long writeTimeoutInMillis,
-                        final long responseTimeoutInMillis) throws TimeoutException, InterruptedException, PoolExhaustedException, NoValidObjectException {
+                        final long responseTimeoutInMillis) throws TimeoutException, InterruptedException, PoolExhaustedException, NoValidObjectException, ExecutionException {
         if (address == null) {
             throw new IllegalArgumentException("address must not be null");
         }
@@ -2352,7 +2335,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
                                        final MemcachedRequest[] requests,
                                        final long writeTimeoutInMillis,
                                        final long responseTimeoutInMillis,
-                                       final Map<K, ?> result) throws PoolExhaustedException, NoValidObjectException, InterruptedException, TimeoutException {
+                                       final Map<K, ?> result) throws PoolExhaustedException, NoValidObjectException, InterruptedException, TimeoutException, ExecutionException {
         if (address == null || requests == null || requests.length == 0) {
             return null;
         }
@@ -2364,66 +2347,100 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
         }
 
         final boolean isMulti = (result != null);
-        Connection<SocketAddress> connection = null;
-        for (int i = 0; i <= retryCount; i++) {
-            try {
-                connection = connectionPool.borrowObject(address, connectTimeoutInMillis);
-            } catch (PoolExhaustedException pee) {
-                if (logger.isLoggable(Level.FINER)) {
-                    logger.log(Level.FINER, "failed to get the connection. address=" + address + ", timeout=" + connectTimeoutInMillis + "ms", pee);
-                }
-                throw pee;
-            } catch (NoValidObjectException nvoe) {
-                if (logger.isLoggable(Level.FINER)) {
-                    logger.log(Level.FINER, "failed to get the connection. address=" + address + ", timeout=" + connectTimeoutInMillis + "ms", nvoe);
-                }
-                removeServer(address, false);
-                throw nvoe;
-            } catch (InterruptedException ie) {
-                if (logger.isLoggable(Level.FINER)) {
-                    logger.log(Level.FINER, "failed to get the connection. address=" + address + ", timeout=" + connectTimeoutInMillis + "ms", ie);
-                }
-                throw ie;
+        final Connection<SocketAddress> connection;
+        try {
+            connection = connectionPool.borrowObject(address, connectTimeoutInMillis);
+        } catch (PoolExhaustedException pee) {
+            if (logger.isLoggable(Level.FINER)) {
+                logger.log(Level.FINER, "failed to get the connection. address=" + address + ", timeout=" + connectTimeoutInMillis + "ms", pee);
             }
-            try {
-                final GrizzlyFuture<WriteResult<MemcachedRequest[], SocketAddress>> future = connection.write(requests);
-                if (writeTimeoutInMillis > 0) {
-                    future.get(writeTimeoutInMillis, TimeUnit.MILLISECONDS);
-                } else {
-                    future.get();
-                }
-            } catch (ExecutionException ee) {
-                // invalid connection
-                try {
-                    connectionPool.removeObject(address, connection);
-                } catch (Exception e) {
-                    if (logger.isLoggable(Level.SEVERE)) {
-                        logger.log(Level.SEVERE, "failed to remove the connection. address=" + address + ", connection=" + connection, e);
-                    }
-                }
-                connection = null;
-                // retry
-                continue;
+            throw pee;
+        } catch (NoValidObjectException nvoe) {
+            if (logger.isLoggable(Level.FINER)) {
+                logger.log(Level.FINER, "failed to get the connection. address=" + address + ", timeout=" + connectTimeoutInMillis + "ms", nvoe);
             }
-            break;
-        }
-        if (connection == null) {
             removeServer(address, false);
-            return result;
+            throw nvoe;
+        } catch (InterruptedException ie) {
+            if (logger.isLoggable(Level.FINER)) {
+                logger.log(Level.FINER, "failed to get the connection. address=" + address + ", timeout=" + connectTimeoutInMillis + "ms", ie);
+            }
+            throw ie;
+        }
+
+        try {
+            final GrizzlyFuture<WriteResult<MemcachedRequest[], SocketAddress>> future = connection.write(requests);
+            if (writeTimeoutInMillis > 0) {
+                future.get(writeTimeoutInMillis, TimeUnit.MILLISECONDS);
+            } else {
+                future.get();
+            }
+            final Object response;
+            if (!isMulti) {
+                response =clientFilter.getCorrelatedResponse(connection, requests[0], responseTimeoutInMillis);
+            } else {
+                response = clientFilter.getMultiResponse(connection, requests, responseTimeoutInMillis, result);
+            }
+            returnConnectionSafely(address, connection);
+            return response;
+        } catch (ExecutionException ee) {
+            // invalid connection
+            try {
+                connectionPool.removeObject(address, connection);
+            } catch (Exception e) {
+                if (logger.isLoggable(Level.SEVERE)) {
+                    logger.log(Level.SEVERE, "failed to remove the connection. address=" + address + ", connection=" + connection, e);
+                }
+            }
+            throw ee;
+        } catch (TimeoutException te) {
+            try {
+                connectionPool.removeObject(address, connection);
+            } catch (Exception e) {
+                if (logger.isLoggable(Level.SEVERE)) {
+                    logger.log(Level.SEVERE, "failed to remove the connection. address=" + address + ", connection=" + connection, e);
+                }
+            }
+            throw te;
+        } catch (InterruptedException ie) {
+            try {
+                connectionPool.removeObject(address, connection);
+            } catch (Exception e) {
+                if (logger.isLoggable(Level.SEVERE)) {
+                    logger.log(Level.SEVERE, "failed to remove the connection. address=" + address + ", connection=" + connection, e);
+                }
+            }
+            throw ie;
+        } catch (Exception unexpected) {
+            try {
+                connectionPool.removeObject(address, connection);
+            } catch (Exception e) {
+                if (logger.isLoggable(Level.SEVERE)) {
+                    logger.log(Level.SEVERE, "failed to remove the connection. address=" + address + ", connection=" + connection, e);
+                }
+            }
+            throw new ExecutionException(unexpected);
+        }
+    }
+
+    private void returnConnectionSafely(final SocketAddress address, final Connection<SocketAddress> connection) {
+        if (address == null || connection == null) {
+            return;
+        }
+        if (connection.isOpen()) {
+            try {
+                connectionPool.returnObject(address, connection);
+            } catch (Exception e) {
+                if (logger.isLoggable(Level.SEVERE)) {
+                    logger.log(Level.SEVERE, "failed to return the connection. address=" + address + ", connection=" + connection, e);
+                }
+            }
         } else {
             try {
-                if (!isMulti) {
-                    return clientFilter.getCorrelatedResponse(connection, requests[0], responseTimeoutInMillis);
-                } else {
-                    return clientFilter.getMultiResponse(connection, requests, responseTimeoutInMillis, result);
-                }
-            } finally {
-                try {
-                    connectionPool.returnObject(address, connection);
-                } catch (Exception e) {
-                    if (logger.isLoggable(Level.SEVERE)) {
-                        logger.log(Level.SEVERE, "failed to return the connection. address=" + address + ", connection=" + connection, e);
-                    }
+                connectionPool.removeObject(address, connection);
+            } catch (Exception e) {
+                if (logger.isLoggable(Level.SEVERE)) {
+                    logger.log(Level.SEVERE, "failed to remove the connection. address=" + address + ", connection=" + connection, e);
                 }
             }
         }
@@ -2566,7 +2583,6 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
 
         private long healthMonitorIntervalInSecs = 60; // 1 min
         private boolean failover = true;
-        private int retryCount = 1;
         private boolean preferRemoteConfig = false;
 
         // connection pool config
@@ -2767,15 +2783,9 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
         }
 
         /**
-         * Set retry count for connection or sending
-         * <p/>
-         * Default is 1.
-         *
-         * @param retryCount the count for retrials
-         * @return this builder
+         * @deprecated not supported anymore
          */
         public Builder<K, V> retryCount(final int retryCount) {
-            this.retryCount = retryCount;
             return this;
         }
 
@@ -2797,7 +2807,6 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
         sb.append(", servers=").append(servers);
         sb.append(", healthMonitorIntervalInSecs=").append(healthMonitorIntervalInSecs);
         sb.append(", failover=").append(failover);
-        sb.append(", retryCount=").append(retryCount);
         sb.append(", preferRemoteConfig=").append(preferRemoteConfig);
         sb.append(", zkListener=").append(zkListener);
         sb.append(", zooKeeperServerListPath='").append(zooKeeperServerListPath).append('\'');
