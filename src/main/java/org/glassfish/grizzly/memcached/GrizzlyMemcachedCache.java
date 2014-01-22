@@ -2332,10 +2332,10 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
     }
 
     private Object sendInternal(final SocketAddress address,
-                                       final MemcachedRequest[] requests,
-                                       final long writeTimeoutInMillis,
-                                       final long responseTimeoutInMillis,
-                                       final Map<K, ?> result) throws PoolExhaustedException, NoValidObjectException, InterruptedException, TimeoutException, ExecutionException {
+                                final MemcachedRequest[] requests,
+                                final long writeTimeoutInMillis,
+                                final long responseTimeoutInMillis,
+                                final Map<K, ?> result) throws PoolExhaustedException, NoValidObjectException, InterruptedException, TimeoutException, ExecutionException {
         if (address == null || requests == null || requests.length == 0) {
             return null;
         }
@@ -2375,14 +2375,6 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
             } else {
                 future.get();
             }
-            final Object response;
-            if (!isMulti) {
-                response =clientFilter.getCorrelatedResponse(connection, requests[0], responseTimeoutInMillis);
-            } else {
-                response = clientFilter.getMultiResponse(connection, requests, responseTimeoutInMillis, result);
-            }
-            returnConnectionSafely(address, connection);
-            return response;
         } catch (ExecutionException ee) {
             // invalid connection
             try {
@@ -2421,6 +2413,39 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
             }
             throw new ExecutionException(unexpected);
         }
+
+        final Object response;
+        try {
+            if (!isMulti) {
+                response = clientFilter.getCorrelatedResponse(connection, requests[0], responseTimeoutInMillis);
+            } else {
+                response = clientFilter.getMultiResponse(connection, requests, responseTimeoutInMillis, result);
+            }
+
+        } catch (TimeoutException te) {
+            returnConnectionSafely(address, connection);
+            throw te;
+        } catch (InterruptedException ie) {
+            try {
+                connectionPool.removeObject(address, connection);
+            } catch (Exception e) {
+                if (logger.isLoggable(Level.SEVERE)) {
+                    logger.log(Level.SEVERE, "failed to remove the connection. address=" + address + ", connection=" + connection, e);
+                }
+            }
+            throw ie;
+        } catch (Exception unexpected) {
+            try {
+                connectionPool.removeObject(address, connection);
+            } catch (Exception e) {
+                if (logger.isLoggable(Level.SEVERE)) {
+                    logger.log(Level.SEVERE, "failed to remove the connection. address=" + address + ", connection=" + connection, e);
+                }
+            }
+            throw new ExecutionException(unexpected);
+        }
+        returnConnectionSafely(address, connection);
+        return response;
     }
 
     private void returnConnectionSafely(final SocketAddress address, final Connection<SocketAddress> connection) {
