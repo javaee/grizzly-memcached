@@ -81,7 +81,10 @@ public class PreferRemoteConfigBarrierListener extends CacheServerListBarrierLis
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.log(Level.FINE, "remote config is ready. remoteCacheServers={0}", remoteCacheServers);
         }
+        // initializes local server list with remote config
+        localCacheServerSet.clear();
         for (final SocketAddress address : remoteCacheServers) {
+            localCacheServerSet.add(address);
             cache.addServer(address);
         }
         super.onInit(regionName, path, remoteBytes);

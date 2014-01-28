@@ -66,7 +66,7 @@ public class CacheServerListBarrierListener implements BarrierListener {
 
     protected final MemcachedCache cache;
     protected final String cacheName;
-    private final Set<SocketAddress> localCacheServerSet = new CopyOnWriteArraySet<SocketAddress>();
+    protected final Set<SocketAddress> localCacheServerSet = new CopyOnWriteArraySet<SocketAddress>();
     private final List<BarrierListener> customListenerList = new CopyOnWriteArrayList<BarrierListener>();
 
     public CacheServerListBarrierListener(final MemcachedCache cache, final Set<SocketAddress> cacheServerSet) {
