@@ -237,7 +237,9 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
                     @Override
                     public void destroyObject(final SocketAddress key, final Connection<SocketAddress> value) throws Exception {
                         if (value != null) {
-                            value.closeSilently();
+                            if (value.isOpen()) {
+                                value.closeSilently();
+                            }
                             final AttributeHolder attributeHolder = value.getAttributes();
                             if (attributeHolder != null) {
                                 attributeHolder.removeAttribute(CONNECTION_POOL_ATTRIBUTE_NAME);
@@ -2569,7 +2571,9 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
                             failures.remove(failure);
                             revivals.put(failure, Boolean.TRUE);
                         }
-                        connection.closeSilently();
+                        if (connection.isOpen()) {
+                            connection.closeSilently();
+                        }
                     } catch (Throwable t) {
                         if (logger.isLoggable(Level.SEVERE)) {
                             logger.log(Level.SEVERE, "unexpected exception thrown", t);
