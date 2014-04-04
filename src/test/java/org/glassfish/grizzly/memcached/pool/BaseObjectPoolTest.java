@@ -110,7 +110,7 @@ public class BaseObjectPoolTest {
             Assert.assertEquals(borrowObjCount, pool.getPeakCount(i));
 
             try {
-                pool.removeAllObjects(i);
+                pool.destroy(i);
             } catch (Exception e) {
                 Assert.fail(e.getMessage());
             }
@@ -120,7 +120,7 @@ public class BaseObjectPoolTest {
             Assert.assertEquals(0, pool.getPoolSize(i));
             Assert.assertEquals(0, pool.getActiveCount(i));
             Assert.assertEquals(0, pool.getIdleCount(i));
-            Assert.assertEquals(borrowObjCount, pool.getPeakCount(i));
+            Assert.assertEquals(0, pool.getPeakCount(i));
 
             Integer object = null;
             try {
@@ -132,7 +132,7 @@ public class BaseObjectPoolTest {
             Assert.assertEquals(1, pool.getPoolSize(i));
             Assert.assertEquals(1, pool.getActiveCount(i));
             Assert.assertEquals(0, pool.getIdleCount(i));
-            Assert.assertEquals(borrowObjCount, pool.getPeakCount(i));
+            Assert.assertEquals(1, pool.getPeakCount(i));
 
             try {
                 pool.returnObject(i, object);
@@ -387,7 +387,7 @@ public class BaseObjectPoolTest {
         Assert.assertEquals(10, factory.sequence);
 
         try {
-            pool.removeAllObjects(key);
+            pool.destroy(key);
         } catch (Exception e) {
             Assert.fail(e.getMessage());
         }
@@ -395,7 +395,7 @@ public class BaseObjectPoolTest {
         Assert.assertEquals(0, pool.getPoolSize(key));
         Assert.assertEquals(0, pool.getActiveCount(key));
         Assert.assertEquals(0, pool.getIdleCount(key));
-        Assert.assertEquals(20, pool.getPeakCount(key));
+        Assert.assertEquals(0, pool.getPeakCount(key));
 
         Assert.assertEquals(0, factory.sequence);
 
