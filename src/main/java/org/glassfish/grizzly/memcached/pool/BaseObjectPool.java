@@ -51,6 +51,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
@@ -108,7 +109,7 @@ public class BaseObjectPool<K, V> implements ObjectPool<K, V> {
      * {@inheritDoc}
      */
     @Override
-    public void createAllMinObjects(final K key) throws NoValidObjectException {
+    public void createAllMinObjects(final K key) throws NoValidObjectException, TimeoutException {
         if (destroyed.get()) {
             throw new IllegalStateException("pool has already destroyed");
         }
@@ -186,7 +187,8 @@ public class BaseObjectPool<K, V> implements ObjectPool<K, V> {
      * {@inheritDoc}
      */
     @Override
-    public V borrowObject(final K key, final long timeoutInMillis) throws PoolExhaustedException, NoValidObjectException, InterruptedException {
+    public V borrowObject(final K key, final long timeoutInMillis)
+            throws PoolExhaustedException, NoValidObjectException, TimeoutException, InterruptedException {
         if (destroyed.get()) {
             throw new IllegalStateException("pool already has destroyed");
         }
@@ -274,7 +276,8 @@ public class BaseObjectPool<K, V> implements ObjectPool<K, V> {
         return result;
     }
 
-    private V createIfUnderSpecificSize(final int specificSize, final QueuePool<V> pool, final K key, final boolean validation) throws NoValidObjectException {
+    private V createIfUnderSpecificSize(final int specificSize, final QueuePool<V> pool, final K key,
+                                        final boolean validation) throws NoValidObjectException, TimeoutException {
         if (destroyed.get()) {
             throw new IllegalStateException("pool has already destroyed");
         }
@@ -312,6 +315,9 @@ public class BaseObjectPool<K, V> implements ObjectPool<K, V> {
                     }
                     return result;
                 }
+            } catch (TimeoutException te) {
+                pool.poolSizeHint.decrementAndGet();
+                throw te;
             } catch (Exception e) {
                 pool.poolSizeHint.decrementAndGet();
                 throw new NoValidObjectException(e);

@@ -83,7 +83,7 @@ public class FailoverTest {
         Assert.assertTrue(userCache.set("name", "foo", 0, false));
         Assert.assertEquals("foo", userCache.get("name", false));
 
-        logger.info("please stop the memcached server in 10 secs...");
+        logger.info("please stop the memcached server in 7 secs...");
         try {
             Thread.sleep(7 * 1000);
         } catch (InterruptedException ignore) {
@@ -93,7 +93,7 @@ public class FailoverTest {
         Assert.assertFalse(userCache.set("name", "foo", 0, false));
         Assert.assertFalse(userCache.isInServerList(DEFAULT_MEMCACHED_ADDRESS));
 
-        logger.info("please start the memcached server in 10 secs...");
+        logger.info("please start the memcached server in 7 secs...");
         try {
             Thread.sleep(7 * 1000);
         } catch (InterruptedException ignore) {
@@ -122,7 +122,7 @@ public class FailoverTest {
         Assert.assertFalse(userCache.set("name", "foo", 0, false));
         Assert.assertNull(userCache.get("name", false));
 
-        logger.info("please start the memcached server in 10 secs...");
+        logger.info("please start the memcached server in 7 secs...");
         try {
             Thread.sleep(7 * 1000);
         } catch (InterruptedException ignore) {
@@ -134,7 +134,7 @@ public class FailoverTest {
         Assert.assertEquals("foo", userCache.get("name", false));
         Assert.assertTrue(userCache.delete("name", false));
 
-        logger.info("please stop the memcached server in 10 secs...");
+        logger.info("please stop the memcached server in 7 secs...");
         try {
             Thread.sleep(7 * 1000);
         } catch (InterruptedException ignore) {
@@ -168,7 +168,7 @@ public class FailoverTest {
         Assert.assertTrue(userCache.set("name", "foo", 0, false));
         Assert.assertEquals("foo", userCache.get("name", false));
 
-        logger.info("please stop the memcached server({}) in 10 secs...", mainServerForNameKey);
+        logger.info("please stop the memcached server({}) in 7 secs...", mainServerForNameKey);
         try {
             Thread.sleep(7 * 1000);
         } catch (InterruptedException ignore) {
@@ -184,7 +184,7 @@ public class FailoverTest {
         Assert.assertTrue(userCache.add("name", "bar", 0, false));
         Assert.assertEquals("bar", userCache.get("name", false));
 
-        logger.info("please start the memcached server({}) in 10 secs...", mainServerForNameKey);
+        logger.info("please start the memcached server({}) in 7 secs...", mainServerForNameKey);
         try {
             Thread.sleep(7 * 1000);
         } catch (InterruptedException ignore) {
@@ -198,7 +198,7 @@ public class FailoverTest {
         Assert.assertEquals("foo", userCache.get("name", false));
         Assert.assertTrue(userCache.delete("name", false));
 
-        logger.info("please stop the memcached server({}) in 10 secs...", mainServerForNameKey);
+        logger.info("please stop the memcached server({}) in 7 secs...", mainServerForNameKey);
         try {
             Thread.sleep(7 * 1000);
         } catch (InterruptedException ignore) {

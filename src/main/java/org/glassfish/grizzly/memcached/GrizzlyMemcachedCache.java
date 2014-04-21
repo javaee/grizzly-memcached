@@ -397,15 +397,6 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
         if (serverAddress == null) {
             return;
         }
-        if (connectionPool != null) {
-            try {
-                connectionPool.destroy(serverAddress);
-            } catch (Exception e) {
-                if (logger.isLoggable(Level.WARNING)) {
-                    logger.log(Level.WARNING, "failed to remove connections in the pool", e);
-                }
-            }
-        }
         if (!forcibly) {
             if (healthMonitorTask != null && healthMonitorTask.failure(serverAddress)) {
                 consistentHash.remove(serverAddress);
@@ -419,6 +410,18 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
             servers.remove(serverAddress);
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, "removed the server from the consistent hash successfully. address={0}", serverAddress);
+            }
+        }
+        if (connectionPool != null) {
+            try {
+                connectionPool.destroy(serverAddress);
+                if (logger.isLoggable(Level.INFO)) {
+                    logger.log(Level.INFO, "removed the server in the pool successfully. address={0}", serverAddress);
+                }
+            } catch (Exception e) {
+                if (logger.isLoggable(Level.WARNING)) {
+                    logger.log(Level.WARNING, "failed to remove connections in the pool", e);
+                }
             }
         }
     }
@@ -1638,6 +1641,11 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
                 logger.log(Level.SEVERE, "failed to get the stats. address=" + address + ", timeout=" + connectTimeoutInMillis + "ms", nvoe);
             }
             return null;
+        } catch (TimeoutException te) {
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, "failed to get the stats. address=" + address + ", timeout=" + connectTimeoutInMillis + "ms", te);
+            }
+            return null;
         } catch (InterruptedException ie) {
             if (logger.isLoggable(Level.SEVERE)) {
                 logger.log(Level.SEVERE, "failed to get the stats. address=" + address + ", timeout=" + connectTimeoutInMillis + "ms", ie);
@@ -2039,7 +2047,8 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
         }
     }
 
-    private void sendNoReply(final SocketAddress address, final MemcachedRequest request) throws PoolExhaustedException, NoValidObjectException, InterruptedException {
+    private void sendNoReply(final SocketAddress address, final MemcachedRequest request)
+            throws PoolExhaustedException, NoValidObjectException, TimeoutException, InterruptedException {
         if (address == null) {
             throw new IllegalArgumentException("address must not be null");
         }
@@ -2064,6 +2073,11 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
             }
             removeServer(address, false);
             throw nvoe;
+        } catch (TimeoutException te) {
+            if (logger.isLoggable(Level.FINER)) {
+                logger.log(Level.FINER, "failed to get the connection. address=" + address + ", timeout=" + connectTimeoutInMillis + "ms", te);
+            }
+            throw te;
         } catch (InterruptedException ie) {
             if (logger.isLoggable(Level.FINER)) {
                 logger.log(Level.FINER, "failed to get the connection. address=" + address + ", timeout=" + connectTimeoutInMillis + "ms", ie);
@@ -2363,6 +2377,11 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
             }
             removeServer(address, false);
             throw nvoe;
+        } catch (TimeoutException te) {
+            if (logger.isLoggable(Level.FINER)) {
+                logger.log(Level.FINER, "failed to get the connection. address=" + address + ", timeout=" + connectTimeoutInMillis + "ms", te);
+            }
+            throw te;
         } catch (InterruptedException ie) {
             if (logger.isLoggable(Level.FINER)) {
                 logger.log(Level.FINER, "failed to get the connection. address=" + address + ", timeout=" + connectTimeoutInMillis + "ms", ie);
