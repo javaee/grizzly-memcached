@@ -761,6 +761,35 @@ public class BasicCommandTest {
 
     // memcached server should be booted in local
     //@Test
+    public void testIncrAndDecrLongValue() {
+        final GrizzlyMemcachedCacheManager manager = new GrizzlyMemcachedCacheManager.Builder().build();
+        final GrizzlyMemcachedCache.Builder<String, String> builder = manager.createCacheBuilder("user");
+        final MemcachedCache<String, String> userCache = builder.build();
+        userCache.addServer(DEFAULT_MEMCACHED_ADDRESS);
+
+        // ensure "age" doesn't exist
+        userCache.delete("score", true);
+
+        // initial age
+        long largeNumber = Long.MAX_VALUE - 1024L;
+        long score = userCache.incr("score", 1, largeNumber, expirationTimeoutInSec, false);
+        Assert.assertEquals(largeNumber, score);
+
+        // increase 1
+        score = userCache.incr("score", 1, largeNumber, expirationTimeoutInSec, false);
+        Assert.assertEquals(largeNumber + 1L, score);
+
+        // decrease 1
+        score = userCache.decr("score", 1, largeNumber, expirationTimeoutInSec, false);
+        Assert.assertEquals(largeNumber, score);
+
+        userCache.delete("score", true);
+
+        manager.shutdown();
+    }
+
+    // memcached server should be booted in local
+    //@Test
     public void testCompress() {
         final GrizzlyMemcachedCacheManager manager = new GrizzlyMemcachedCacheManager.Builder().build();
         final GrizzlyMemcachedCache.Builder<String, String> builder = manager.createCacheBuilder("user");
