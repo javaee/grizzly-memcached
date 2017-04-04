@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -501,6 +501,7 @@ public class BufferWrapper<T> implements Cacheable {
         final byte[] compressed = compress(byteBuffer.array(),
                 byteBuffer.arrayOffset() + byteBuffer.position(),
                 byteBuffer.remaining());
+        byteBuffer.position(byteBuffer.limit());
         buffer.tryDispose();
         return Buffers.wrap(memoryManager, compressed);
     }
@@ -542,6 +543,7 @@ public class BufferWrapper<T> implements Cacheable {
         final int length = limit - position;
         final ByteBuffer byteBuffer = buffer.toByteBuffer(position, limit);
         final byte[] decompressed = decompress(byteBuffer.array(), byteBuffer.arrayOffset() + byteBuffer.position(), length);
+        byteBuffer.position(byteBuffer.position() + length);
         if (decompressed == null) {
             return null;
         }

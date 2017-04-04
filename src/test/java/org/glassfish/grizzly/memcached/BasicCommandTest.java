@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -930,12 +930,16 @@ public class BasicCommandTest {
         boolean result = userCache.add(keyName, smallByteBuffer, expirationTimeoutInSec, false);
         Assert.assertTrue(result);
         ByteBuffer receivedByteBuffer = userCache.get(keyName, false);
-        Assert.assertEquals(smallByteBuffer, receivedByteBuffer);
+        final byte[] smallBytes = new byte[smallSize];
+        receivedByteBuffer.get(smallBytes);
+        Assert.assertArrayEquals(smallByteBuffer.array(), smallBytes);
 
         result = userCache.set(keyName, largeByteBuffer, expirationTimeoutInSec, false);
         Assert.assertTrue(result);
         receivedByteBuffer = userCache.get(keyName, false);
-        Assert.assertEquals(largeByteBuffer, receivedByteBuffer);
+        final byte[] largeBytes = new byte[largeSize];
+        receivedByteBuffer.get(largeBytes);
+        Assert.assertArrayEquals(largeByteBuffer.array(), largeBytes);
 
         // clear
         result = userCache.delete(keyName, false);
