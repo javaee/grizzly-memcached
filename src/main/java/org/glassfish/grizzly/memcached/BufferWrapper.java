@@ -64,7 +64,7 @@ import java.util.zip.GZIPOutputStream;
 
 /**
  * Simple wrapper class for {@link Buffer}, which has original message {@code origin}, original object type {@link BufferType} and converted {@link Buffer}
- * <p/>
+ * <p>
  * Messages which should be sent to the remote peer via network will be always converted into {@link Buffer} instance by {@link #wrap},
  * and the received packet will be always restored to its original messages by {@link #unwrap}
  *

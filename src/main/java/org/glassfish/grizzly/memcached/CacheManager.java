@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,7 +48,7 @@ package org.glassfish.grizzly.memcached;
 public interface CacheManager {
     /**
      * Creates a new {@link CacheBuilder} for the named cache to be managed by this cache manager.
-     * <p/>
+     * <p>
      * The returned CacheBuilder is associated with this CacheManager.
      * The Cache will be created, added to the caches controlled by this CacheManager and started when
      * {@link CacheBuilder#build()} is called.

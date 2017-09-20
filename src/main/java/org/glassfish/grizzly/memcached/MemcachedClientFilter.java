@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -65,20 +65,20 @@ import java.util.logging.Logger;
 
 /**
  * The {@link org.glassfish.grizzly.filterchain.Filter} implementation for memcached
- * <p/>
+ * <p>
  * This filter has an unbounded {@link BlockingQueue} per a connection for storing user's request.
  * When the response will be received, the corresponding request will be removed in queue
  * and the filter will pass the complete result to original request and notify the waiting sender.
- * <p/>
+ * <p>
  * If the memcached's command is a kind of quiet's, it is possible for the server not to send the response to client.
  * Then the filter skips the quiet request with {@link ParsingStatus#NO_REPLY} status and processes next request.
- * <p/>
+ * <p>
  * This filter has two options.
  * 1) {@code localParsingOptimizing}:
  * the input buffer has more than 1 complete memcached message,
  * the filter will parse the input buffer continuously in the same thread and local loop
  * without going through filter chains and spliting up the input buffer if this flag is true.
- * <p/>
+ * <p>
  * 2) {@code onceAllocationOptimizing}:
  * Before multi-command(bulk-command) like getMulti and setMulti will be sent to the server, individual packets should be allocated.
  * If this flag is true, the filter will calculate the total buffer size of individual requests in advance

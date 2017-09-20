@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,7 +60,7 @@ import java.util.logging.Logger;
 
 /**
  * The implementation of the {@link CacheManager} based on Grizzly
- * <p/>
+ * <p>
  * This cache manager has a key(String cache name)/value({@link GrizzlyMemcachedCache} map for retrieving caches.
  * If the specific {@link TCPNIOTransport GrizzlyTransport} is not set at creation time, this will create a main GrizzlyTransport.
  * The {@link TCPNIOTransport GrizzlyTransport} must contain {@link MemcachedClientFilter}.
@@ -204,7 +204,7 @@ public class GrizzlyMemcachedCacheManager implements CacheManager {
 
     /**
      * Add the given {@code cache} to this cache manager
-     * <p/>
+     * <p>
      * If this returns false, the given {@code cache} should be stopped by caller.
      * Currently, this method is called by only {@link org.glassfish.grizzly.memcached.GrizzlyMemcachedCache.Builder#build()}.
      *
@@ -236,7 +236,7 @@ public class GrizzlyMemcachedCacheManager implements CacheManager {
 
         /**
          * Set the specific {@link TCPNIOTransport GrizzlyTransport}
-         * <p/>
+         * <p>
          * If this is not set or set to be null, {@link GrizzlyMemcachedCacheManager} will create a default transport.
          * The given {@code transport} must be always started state if it is not null.
          * Default is null.
@@ -251,7 +251,7 @@ public class GrizzlyMemcachedCacheManager implements CacheManager {
 
         /**
          * Set selector threads' count
-         * <p/>
+         * <p>
          * If this cache manager will create a default transport, the given selector counts will be passed to {@link TCPNIOTransport}.
          * Default is processors' count * 2.
          *
@@ -265,7 +265,7 @@ public class GrizzlyMemcachedCacheManager implements CacheManager {
 
         /**
          * Set the specific IO Strategy of Grizzly
-         * <p/>
+         * <p>
          * If this cache manager will create a default transport, the given {@link IOStrategy} will be passed to {@link TCPNIOTransport}.
          * Default is {@link SameThreadIOStrategy}.
          *
@@ -279,7 +279,7 @@ public class GrizzlyMemcachedCacheManager implements CacheManager {
 
         /**
          * Enable or disable the blocking mode
-         * <p/>
+         * <p>
          * If this cache manager will create a default transport, the given mode will be passed to {@link TCPNIOTransport}.
          * Default is false.
          *
@@ -293,7 +293,7 @@ public class GrizzlyMemcachedCacheManager implements CacheManager {
 
         /**
          * Set the specific worker thread pool
-         * <p/>
+         * <p>
          * If this cache manager will create a default transport, the given {@link ExecutorService} will be passed to {@link TCPNIOTransport}.
          * This is only effective if {@link IOStrategy} is not {@link SameThreadIOStrategy}.
          * Default is null.

@@ -55,17 +55,17 @@ import java.util.zip.CRC32;
 
 /**
  * The implementation class of the Consistent Hashing algorithms
- * <p/>
+ * <p>
  * Given keys and values will be hashed by MD5 and stored in sorted map.
  * If MD5 is not supported, CRC32 will be used.
  * Values(such as server list) can be added and removed dynamically.
- * <p/>
+ * <p>
  * This store supports keys of String, byte array and ByteBuffer type
- * <p/>
+ * <p>
  * Ketama's logic applied partially.
- * <p/>
+ * <p>
  * This class should be thread-safe.
- * <p/>
+ * <p>
  * Example of use:
  * See org.glassfish.grizzly.memcached.ConsistentHashStoreTest's test codes
  *

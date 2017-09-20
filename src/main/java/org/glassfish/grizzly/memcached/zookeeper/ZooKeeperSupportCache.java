@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,7 +42,7 @@ package org.glassfish.grizzly.memcached.zookeeper;
 
 /**
  * The interface using the ZooKeeper for synchronizing cache server list
- * <p/>
+ * <p>
  * Example of use:
  * {@code
  * final GrizzlyMemcachedCacheManager.Builder managerBuilder = new GrizzlyMemcachedCacheManager.Builder();
@@ -103,7 +103,7 @@ public interface ZooKeeperSupportCache {
 
     /**
      * Set the current cache server list string with the given {@code cacheServerList}
-     * <p/>
+     * <p>
      * {@code cacheServerList} could be comma separated host:port pairs, each corresponding to a memcached server.
      * e.g. "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
      * Be careful that this operation will propagate {@code cacheServerList} to caches which has joinned the same cache name(scope)

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -88,25 +88,25 @@ import java.util.logging.Logger;
 
 /**
  * The implementation of the {@link MemcachedCache} based on Grizzly
- * <p/>
+ * <p>
  * Basically, this class use {@link BaseObjectPool} for pooling connections of the memcached server
  * and {@link ConsistentHashStore} for selecting the memcached server corresponding to the given key.
- * <p/>
+ * <p>
  * When a Cache operation is called,
  * 1. finding the correct server by consistent hashing
  * 2. borrowing the connection from the connection pool
  * 3. queueing request and sending packets to the memcached server and waiting for notification
  * 4. being waken by Grizzly filter when the response is arrived
  * 5. returning the connection to the pool
- * <p/>
+ * <p>
  * For the failback of the memcached server, {@link HealthMonitorTask} will be scheduled by {@code healthMonitorIntervalInSecs}.
  * If connecting and writing are failed, this cache retries failure operations by {@code retryCount}.
  * If retrials also failed, the server will be regarded as not valid and removed in {@link ConsistentHashStore}.
  * Sometimes, automatical changes of the server list can cause stale cache data at runtime.
  * So this cache provides {@code failover} flag which can turn off the failover/failback.
- * <p/>
+ * <p>
  * This cache also supports bulk operations such as {@link #setMulti} as well as {@link #getMulti}.
- * <p/>
+ * <p>
  * Example of use:
  * {@code
  * // creates a CacheManager
@@ -2666,7 +2666,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
 
         /**
          * Set global connect-timeout
-         * <p/>
+         * <p>
          * If the given param is negative, the timeout is infite.
          * Default is 5000.
          *
@@ -2680,7 +2680,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
 
         /**
          * Set global write-timeout
-         * <p/>
+         * <p>
          * If the given param is negative, the timeout is infite.
          * Default is 5000.
          *
@@ -2694,7 +2694,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
 
         /**
          * Set global response-timeout
-         * <p/>
+         * <p>
          * If the given param is negative, the timeout is infite.
          * Default is 10000.
          *
@@ -2708,7 +2708,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
 
         /**
          * Set connection pool's min
-         * <p/>
+         * <p>
          * Default is 5.
          *
          * @param minConnectionPerServer connection pool's min
@@ -2722,7 +2722,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
 
         /**
          * Set connection pool's max
-         * <p/>
+         * <p>
          * Default is {@link Integer#MAX_VALUE}
          *
          * @param maxConnectionPerServer connection pool's max
@@ -2736,7 +2736,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
 
         /**
          * Set connection pool's KeepAliveTimeout
-         * <p/>
+         * <p>
          * Default is 1800.
          *
          * @param keepAliveTimeoutInSecs connection pool's KeepAliveTimeout in seconds
@@ -2750,7 +2750,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
 
         /**
          * Set health monitor's interval
-         * <p/>
+         * <p>
          * This cache will schedule HealthMonitorTask with this interval.
          * HealthMonitorTask will check the failure servers periodically and detect the revived server.
          * If the given parameter is negative, this cache never schedules HealthMonitorTask
@@ -2767,7 +2767,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
 
         /**
          * Allow or disallow disposable connections
-         * <p/>
+         * <p>
          * Default is false.
          *
          * @param allowDisposableConnection true if this cache allows disposable connections
@@ -2780,7 +2780,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
 
         /**
          * Enable or disable the connection validation when the connection is borrowed from the connection pool
-         * <p/>
+         * <p>
          * Default is false.
          *
          * @param borrowValidation true if this cache should make sure the borrowed connection is valid
@@ -2793,7 +2793,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
 
         /**
          * Enable or disable the connection validation when the connection is returned to the connection pool
-         * <p/>
+         * <p>
          * Default is false.
          *
          * @param returnValidation true if this cache should make sure the returned connection is valid
@@ -2819,7 +2819,7 @@ public class GrizzlyMemcachedCache<K, V> implements MemcachedCache<K, V>, ZooKee
 
         /**
          * Enable or disable failover/failback
-         * <p/>
+         * <p>
          * Default is true.
          *
          * @param failover true if this cache should support failover/failback when the server is failed or revived

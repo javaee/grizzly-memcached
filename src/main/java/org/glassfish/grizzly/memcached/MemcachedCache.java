@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,10 +47,10 @@ import java.util.Set;
 
 /**
  * The memcached's cache interface
- * <p/>
+ * <p>
  * This interface extends {@link Commands} and {@link Cache} and has methods related to operation timeout.
  * Additionally, this supports several bulk operations such as {@link #getMulti} and {@link #setMulti} for dramatic performance improvement.
- * <p/>
+ * <p>
  * By {@link #addServer} and {@link #removeServer}, servers can be added and removed dynamically in this cache.
  * In other words, the managed server list can be changed in runtime by APIs.
  *
