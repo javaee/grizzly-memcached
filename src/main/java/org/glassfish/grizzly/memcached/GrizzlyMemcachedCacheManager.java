@@ -49,7 +49,7 @@ import org.glassfish.grizzly.memcached.zookeeper.ZooKeeperConfig;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransportBuilder;
 import org.glassfish.grizzly.strategies.SameThreadIOStrategy;
-import org.glassfish.grizzly.utils.DataStructures;
+import org.jboss.netty.util.internal.ConcurrentHashMap;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
@@ -71,7 +71,7 @@ public class GrizzlyMemcachedCacheManager implements CacheManager {
 
     private static final Logger logger = Grizzly.logger(GrizzlyMemcachedCacheManager.class);
 
-    private final ConcurrentMap<String, GrizzlyMemcachedCache<?, ?>> caches = DataStructures.getConcurrentMap();
+    private final ConcurrentMap<String, GrizzlyMemcachedCache<?, ?>> caches = new ConcurrentHashMap<>();
     private final TCPNIOTransport transport;
     private final boolean isExternalTransport;
     private final AtomicBoolean shutdown = new AtomicBoolean(false);

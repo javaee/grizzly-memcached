@@ -41,13 +41,13 @@
 package org.glassfish.grizzly.memcached;
 
 import org.glassfish.grizzly.Grizzly;
-import org.glassfish.grizzly.utils.DataStructures;
 
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -81,7 +81,7 @@ public class ConsistentHashStore<T> {
     private static final int REPLICA_NUMBER = 160;
 
     private final ConcurrentSkipListMap<Long, T> buckets = new ConcurrentSkipListMap<Long, T>();
-    private final Set<T> values = Collections.newSetFromMap(DataStructures.<T, Boolean>getConcurrentMap());
+    private final Set<T> values = Collections.newSetFromMap(new ConcurrentHashMap<T, Boolean>());
 
     /**
      * Add the value such as a server name

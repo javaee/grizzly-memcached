@@ -51,13 +51,13 @@ import org.glassfish.grizzly.memcached.pool.ObjectPool;
 import org.glassfish.grizzly.memory.Buffers;
 import org.glassfish.grizzly.memory.CompositeBuffer;
 import org.glassfish.grizzly.memory.MemoryManager;
-import org.glassfish.grizzly.utils.DataStructures;
 import org.glassfish.grizzly.utils.NullaryFunction;
 
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -113,7 +113,7 @@ public class MemcachedClientFilter extends BaseFilter {
             Grizzly.DEFAULT_ATTRIBUTE_BUILDER.<BlockingQueue<MemcachedRequest>>createAttribute("MemcachedClientFilter.RequestQueue",
                     new NullaryFunction<BlockingQueue<MemcachedRequest>>() {
                         public BlockingQueue<MemcachedRequest> evaluate() {
-                            return DataStructures.getLTQInstance();
+                            return new LinkedTransferQueue<>();
                         }
                     });
 

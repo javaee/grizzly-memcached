@@ -49,7 +49,6 @@ import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Stat;
 import org.glassfish.grizzly.Grizzly;
-import org.glassfish.grizzly.utils.DataStructures;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -61,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -135,7 +135,7 @@ public class ZKClient {
     private boolean connected;
     private Watcher.Event.KeeperState currentState;
     private AtomicBoolean running = new AtomicBoolean(true);
-    private final Map<String, BarrierListener> listenerMap = DataStructures.getConcurrentMap();
+    private final Map<String, BarrierListener> listenerMap = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduledExecutor;
     private ZooKeeper zooKeeper;
 
